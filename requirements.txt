@@ -4,3 +4,5 @@ opencv-python
 pillow==6.2.2
 xtcocotools
 scipy
+mmcv-full==1.7.0
+mmpose==0.29.0
