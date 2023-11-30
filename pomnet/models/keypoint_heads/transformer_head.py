@@ -157,12 +157,14 @@ class TransformerHead(TopdownHeatmapBaseHead):
                  extra=None,
                  loss_keypoint=None,
                  train_cfg=None,
-                 test_cfg=None):
+                 test_cfg=None,
+                 Dino=False):
         # NOTE here use `AnchorFreeHead` instead of `TransformerHead`,
         # since it brings inconvenience when the initialization of
         # `AnchorFreeHead` is called.
         super().__init__()
 
+        self.use_dino = Dino
         out_channels = 1
         self.in_channels = in_channels
         self.positional_encoding = build_positional_encoding(
@@ -291,6 +293,10 @@ class TransformerHead(TopdownHeatmapBaseHead):
 
     def _init_layers(self):
         """Initialize layers of the transformer head."""
+        if self.use_dino:
+            self.downsample = Conv2d(in_channels=self.in_channels, out_channels=self.in_channels, kernel_size=3, stride=2, padding=1)
+        else:
+            self.downsample = nn.Identity()
         self.input_proj = Conv2d(
             self.in_channels, self.embed_dims, kernel_size=1)
         self.query_proj = Linear(
@@ -339,6 +345,7 @@ class TransformerHead(TopdownHeatmapBaseHead):
         # ignored positions, while zero values means valid positions.
 
         # process query image feature
+        x = self.downsample(x)
         x = self.input_proj(x)
         masks = x.new_zeros((x.shape[0], x.shape[2], x.shape[3])).to(torch.bool)
         pos_embed = self.positional_encoding(masks)  # [bs, embed_dim, h, w]

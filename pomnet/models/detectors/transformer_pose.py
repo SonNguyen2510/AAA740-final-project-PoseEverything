@@ -1,14 +1,20 @@
 import math
+from enum import Enum
 
 import cv2
 import mmcv
 import numpy as np
 from mmcv.image import imwrite
 from mmcv.visualization.image import imshow
+from ..dinov2.hub.backbones import _make_dinov2_model
+from functools import partial
 
 from mmpose.models import builder
 from mmpose.models.detectors.base import BasePose
 from mmpose.models.builder import POSENETS
+
+class Weights(Enum):
+    IMAGENET1K = "IMAGENET1K"
 
 @POSENETS.register_module()
 class TransformerPose(BasePose):
@@ -30,15 +36,20 @@ class TransformerPose(BasePose):
                  keypoint_head,
                  train_cfg=None,
                  test_cfg=None,
-                 pretrained=None):
+                 pretrained=None,
+                 Dino=False):
         super().__init__()
 
-        self.encoder_sample = builder.build_backbone(encoder_sample)
-        self.encoder_query = builder.build_backbone(encoder_query)
+        if Dino:
+            self.encoder_sample = _make_dinov2_model(arch_name="vit_small", pretrained=True)
+            self.encoder_query = _make_dinov2_model(arch_name="vit_small", pretrained=True)
+        else:
+            self.encoder_sample = builder.build_backbone(encoder_sample)
+            self.encoder_query = builder.build_backbone(encoder_query)
 
         self.keypoint_head = builder.build_head(keypoint_head)
 
-        self.init_weights(pretrained=pretrained)
+        self.init_weights(Dino, pretrained=pretrained)
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -49,10 +60,11 @@ class TransformerPose(BasePose):
         """Check if has keypoint_head."""
         return hasattr(self, 'keypoint_head')
 
-    def init_weights(self, pretrained=None):
+    def init_weights(self, Dino, pretrained=None):
         """Weight initialization for model."""
-        self.encoder_sample.init_weights(pretrained)
-        self.encoder_query.init_weights(pretrained)
+        if not Dino: 
+            self.encoder_sample.init_weights(pretrained)
+            self.encoder_query.init_weights(pretrained)
         self.keypoint_head.init_weights()
 
     def forward(self,
