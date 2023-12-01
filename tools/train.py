@@ -13,6 +13,7 @@ from mmcv.utils import get_git_hash
 from pomnet import *  # noqa
 from pomnet.apis import train_model
 from pomnet.datasets import build_dataset
+import mmcv_custom
 
 from mmpose import __version__
 from mmpose.models import build_posenet
