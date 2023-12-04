@@ -4,7 +4,7 @@ resume_from = None
 dist_params = dict(backend='nccl')
 workflow = [('train', 1)]
 checkpoint_config = dict(interval=10)
-evaluation = dict(interval=10, metric='PCK', key_indicator='PCK', gpu_collect=True)
+evaluation = dict(interval=10, metric='PCK', key_indicator='PCK', gpu_collect=True, res_folder="results")
 optimizer = dict(
     type='Adam',
     lr=5e-4,
@@ -140,7 +140,7 @@ test_pipeline = valid_pipeline
 
 data_root = 'data/mp100'
 data = dict(
-    samples_per_gpu=16,
+    samples_per_gpu=8,
     workers_per_gpu=2,
     train=dict(
         type='TransformerPoseDataset',
