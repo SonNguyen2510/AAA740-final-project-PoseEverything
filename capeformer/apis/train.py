@@ -3,6 +3,8 @@ import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (DistSamplerSeedHook, EpochBasedRunner, OptimizerHook,
                          build_optimizer)
+import mmcv
+import os.path as osp
 
 from mmpose.core import DistEvalHook, EvalHook, Fp16OptimizerHook
 from mmpose.datasets import build_dataloader
@@ -101,6 +103,7 @@ def train_model(model,
     if validate:
         eval_cfg = cfg.get('evaluation', {})
         eval_cfg['res_folder'] = os.path.join(cfg.work_dir, eval_cfg['res_folder'])
+        mmcv.mkdir_or_exist(osp.abspath(eval_cfg['res_folder']))
         dataloader_setting = dict(
             # samples_per_gpu=cfg.data.get('samples_per_gpu', {}),
             samples_per_gpu=1,
