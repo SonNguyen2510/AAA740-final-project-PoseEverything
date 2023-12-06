@@ -53,12 +53,9 @@ class TransformerPoseTwoStage(BasePose):
         else:
             if Dino:
                 self.encoder_sample = self.encoder_query = _make_dinov2_model(arch_name="vit_small", pretrained=True)
-                print("xxxxxxxxxxxxxxxxxxxxxxx")
-                # self.encoder_query = _make_dinov2_model(arch_name="vit_small", pretrained=True)
             else:
                 self.encoder_sample = self.encoder_query = builder.build_backbone(
                     encoder_config)
-                print("yyyyyyyyyyyyyyyyyyyyyy")
             
 
         self.keypoint_head = builder.build_head(keypoint_head)

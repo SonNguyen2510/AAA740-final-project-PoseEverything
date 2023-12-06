@@ -13,6 +13,7 @@ from mmcv.utils import get_git_hash
 from capeformer import *  # noqa
 from capeformer.apis import train_model
 from capeformer.datasets import build_dataset
+import mmcv_custom
 
 from mmpose import __version__
 from mmpose.models import build_posenet
@@ -94,9 +95,13 @@ def main():
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs',
                                 osp.splitext(osp.basename(args.config))[0])
+    # create work_dir
+    mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
+
     # auto resume
     if args.auto_resume:
-        checkpoint = os.path.join(args.work_dir, 'latest.pth')
+        # print(cfg.work_dir)
+        checkpoint = os.path.join(cfg.work_dir, 'latest.pth')
         if os.path.exists(checkpoint):
             cfg.resume_from = checkpoint
     
@@ -121,8 +126,6 @@ def main():
         _, world_size = get_dist_info()
         cfg.gpu_ids = range(world_size)
 
-    # create work_dir
-    mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # init the logger before other steps
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
