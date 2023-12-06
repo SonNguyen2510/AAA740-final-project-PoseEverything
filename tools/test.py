@@ -8,8 +8,8 @@ from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
-from pomnet import *  # noqa
-from pomnet.datasets import build_dataset
+from capeformer import *  # noqa
+from capeformer.datasets import build_dataset
 
 from mmpose.apis import multi_gpu_test, single_gpu_test
 from mmpose.core import wrap_fp16_model
@@ -19,8 +19,8 @@ from mmpose.models import build_posenet
 
 def parse_args():
     parser = argparse.ArgumentParser(description='mmpose test model')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('config', default=None, help='test config file path')
+    parser.add_argument('checkpoint', default=None, help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
         '--fuse-conv-bn',
@@ -135,10 +135,18 @@ def main():
             print(f'\nwriting results to {args.out}')
             mmcv.dump(outputs, args.out)
 
-        results = dataset.evaluate(outputs, args.work_dir, **eval_config)
+        results = dataset.evaluate(outputs, **eval_config)
+        print('\n')
         for k, v in sorted(results.items()):
             print(f'{k}: {v}')
 
-
+        # save testing log
+        test_log = "./work_dirs/testing_log.txt"
+        with open(test_log, 'a') as f:
+            f.write("**  config_file: " + args.config + "\t checkpoint: " + args.checkpoint + "\t \n")
+            for k, v in sorted(results.items()):
+                f.write(f'\t {k}: {v}'+'\n')
+            f.write("********************************************************************\n")
+        
 if __name__ == '__main__':
     main()

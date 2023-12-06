@@ -10,10 +10,9 @@ from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist, set_random_seed
 from mmcv.utils import get_git_hash
 
-from pomnet import *  # noqa
-from pomnet.apis import train_model
-from pomnet.datasets import build_dataset
-import mmcv_custom
+from capeformer import *  # noqa
+from capeformer.apis import train_model
+from capeformer.datasets import build_dataset
 
 from mmpose import __version__
 from mmpose.models import build_posenet
@@ -22,10 +21,12 @@ from mmpose.utils import collect_env, get_root_logger
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a pose model')
-    parser.add_argument('config', help='train config file path')
-    parser.add_argument('--work-dir', help='the dir to save logs and models')
+    parser.add_argument('--config', default=None, help='train config file path')
+    parser.add_argument('--work-dir', default=None, help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument(
+        '--auto-resume', type=bool, default=True, help='automatically detect the latest checkpoint in word dir and resume from it.')
     parser.add_argument(
         '--no-validate',
         action='store_true',
@@ -46,7 +47,7 @@ def parse_args():
     parser.add_argument(
         '--deterministic',
         action='store_true',
-        help='whether to set deterministic options for CUDNN backend.')
+        help='whether to set deterministic options for CUDNN backend.') 
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -84,7 +85,8 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
 
-    # work_dir is determined in this priority: CLI > segment in file > filename
+    # work_dir is determined in this priority: CLI 
+    # > segment in file > filename
     if args.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
         cfg.work_dir = args.work_dir
@@ -92,6 +94,12 @@ def main():
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs',
                                 osp.splitext(osp.basename(args.config))[0])
+    # auto resume
+    if args.auto_resume:
+        checkpoint = os.path.join(args.work_dir, 'latest.pth')
+        if os.path.exists(checkpoint):
+            cfg.resume_from = checkpoint
+    
     if args.resume_from is not None:
         cfg.resume_from = args.resume_from
     if args.gpu_ids is not None:
