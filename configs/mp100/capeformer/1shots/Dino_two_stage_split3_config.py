@@ -9,11 +9,22 @@ evaluation = dict(
     metric=['PCK','NME','AUC','EPE'],
     key_indicator='PCK',
     gpu_collect=True,
-    res_folder='')
-optimizer = dict(
-    type='Adam',
-    lr=1e-5,
-)
+    res_folder='results')
+optimizer = dict(type='AdamW', lr=5e-4, betas=(0.9, 0.999), weight_decay=0.1,
+                 constructor='LayerDecayOptimizerConstructor', 
+                 paramwise_cfg=dict(
+                                    num_layers=12, 
+                                    layer_decay_rate=0.8,
+                                    custom_keys={
+                                            'bias': dict(decay_multi=0.),
+                                            'pos_embed': dict(decay_mult=0.),
+                                            'relative_position_bias_table': dict(decay_mult=0.),
+                                            'norm': dict(decay_mult=0.)
+                                            }
+                                    )
+                )
+
+optimizer_config = dict(grad_clip=dict(max_norm=1., norm_type=2))
 
 optimizer_config = dict(grad_clip=None)
 # learning policy
@@ -28,7 +39,7 @@ log_config = dict(
     interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 
 channel_cfg = dict(
@@ -135,7 +146,7 @@ valid_pipeline = [
 
 test_pipeline = valid_pipeline
 
-data_root = '/media/daeun/Shared/dev/pomnet_data/mp100'
+data_root = '/media/sonnguyen/DATA2/Study/superAI/Pose-for-Everything/tools/data/mp100/images'
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=8,
