@@ -12,7 +12,7 @@ In our experience, training on DinoV2 takes 8-9 hours, but it can vary in data s
 test 
 --------------------
 ```python
-python test.py ${CONFIG_FILE} ${CHECKPOINT_FILE}
+python test.py ${your config} ${checkpoint file}
 ```
 
 In our experience, evaluation takes 20-30 mins, but it can vary in data split and your environment.
