@@ -175,6 +175,8 @@ class TransformerPoseTwoStage(BasePose):
                 target_sizes)
             losses.update(keypoint_accuracy)
 
+        print("forward_")
+        exit()
         return losses
 
     def forward_test(self,
@@ -229,6 +231,11 @@ class TransformerPoseTwoStage(BasePose):
             })
 
         result.update({"sample_image_file": img_metas[0]['sample_image_file']})
+
+        vis_out = "/media/daeun/Shared/dev/pomnet_data/visualization"
+        image = cv2.cvtColor(img_q.squeeze(0).cpu().numpy().transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
+        out_file = vis_out + result["image_paths"][0].split("/")[-1]
+        self.show_result(image, result, out_file=out_file, pose_kpt_color=[[0, 0, 255] for i in range(len(result['preds'][0]))], show=True)
 
         return result
 
@@ -295,8 +302,8 @@ class TransformerPoseTwoStage(BasePose):
         img = img.copy()
         img_h, img_w, _ = img.shape
 
-        bbox_result = []
-        pose_result = []
+        bbox_result = result['boxes']
+        pose_result = result['preds']
         for res in result:
             bbox_result.append(res['bbox'])
             pose_result.append(res['keypoints'])
@@ -324,18 +331,21 @@ class TransformerPoseTwoStage(BasePose):
                         x_coord, y_coord, kpt_score = int(kpt[0]), int(
                             kpt[1]), kpt[2]
                         if kpt_score > kpt_score_thr:
+                            print("prints the keypoints")
                             img_copy = img.copy()
                             r, g, b = pose_kpt_color[kid]
-                            cv2.circle(img_copy, (int(x_coord), int(y_coord)),
+                            img = cv2.circle(img_copy, (int(x_coord), int(y_coord)),
                                        radius, (int(r), int(g), int(b)), -1)
                             transparency = max(0, min(1, kpt_score))
-                            cv2.addWeighted(
+                            print(f"transparency : {transparency}")
+                            
+                            img = cv2.addWeighted(
                                 img_copy,
                                 transparency,
                                 img,
                                 1 - transparency,
-                                0,
-                                dst=img)
+                                0)
+                            # cv2.imshow("img_copy", img)
 
                 # draw limbs
                 if skeleton is not None and pose_limb_color is not None:
@@ -381,7 +391,7 @@ class TransformerPoseTwoStage(BasePose):
                                 0,
                                 dst=img)
 
-        show, wait_time = 1, 1
+        show, wait_time = True, 1
         if show:
             height, width = img.shape[:2]
             max_ = max(height, width)
@@ -394,7 +404,7 @@ class TransformerPoseTwoStage(BasePose):
                 interpolation=cv2.INTER_CUBIC)
             imshow(enlarge, win_name, wait_time)
 
-        if out_file is not None:
-            imwrite(img, out_file)
+        # if out_file is not None:
+        cv2.imwrite(img, out_file)
 
         return img
