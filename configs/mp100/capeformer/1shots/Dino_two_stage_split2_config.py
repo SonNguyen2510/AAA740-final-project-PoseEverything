@@ -15,8 +15,6 @@ optimizer = dict(
     lr=1e-5,
 )
 
-optimizer_config = dict(grad_clip=dict(max_norm=1., norm_type=2))
-
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
