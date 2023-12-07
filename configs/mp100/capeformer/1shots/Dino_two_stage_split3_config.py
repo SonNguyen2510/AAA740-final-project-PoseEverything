@@ -9,20 +9,11 @@ evaluation = dict(
     metric=['PCK','NME','AUC','EPE'],
     key_indicator='PCK',
     gpu_collect=True,
-    res_folder='results')
-optimizer = dict(type='AdamW', lr=5e-4, betas=(0.9, 0.999), weight_decay=0.1,
-                 constructor='LayerDecayOptimizerConstructor', 
-                 paramwise_cfg=dict(
-                                    num_layers=12, 
-                                    layer_decay_rate=0.8,
-                                    custom_keys={
-                                            'bias': dict(decay_multi=0.),
-                                            'pos_embed': dict(decay_mult=0.),
-                                            'relative_position_bias_table': dict(decay_mult=0.),
-                                            'norm': dict(decay_mult=0.)
-                                            }
-                                    )
-                )
+    res_folder='')
+optimizer = dict(
+    type='Adam',
+    lr=1e-5,
+)
 
 optimizer_config = dict(grad_clip=dict(max_norm=1., norm_type=2))
 

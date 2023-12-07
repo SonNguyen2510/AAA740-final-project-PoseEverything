@@ -15,6 +15,8 @@ optimizer = dict(
     lr=1e-5,
 )
 
+optimizer_config = dict(grad_clip=dict(max_norm=1., norm_type=2))
+
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -28,7 +30,7 @@ log_config = dict(
     interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 
 channel_cfg = dict(
@@ -47,11 +49,12 @@ channel_cfg = dict(
 # model settings
 model = dict(
     type='TransformerPoseTwoStage',
+    Dino=True,
     pretrained='torchvision://resnet50',
     encoder_config=dict(type='ResNet', depth=50, out_indices=(3, )),
     keypoint_head=dict(
         type='TwoStageHead',
-        in_channels=2048,
+        in_channels=384,
         transformer=dict(
             type='TwoStageSupportRefineTransformer',
             d_model=256,
@@ -81,10 +84,12 @@ model = dict(
         flip_test=False,
         post_process='default',
         shift_heatmap=True,
-        modulate_kernel=11))
+        modulate_kernel=11, 
+        Dino=True
+        ))
 
 data_cfg = dict(
-    image_size=[256, 256],
+    image_size=[224, 224],
     heatmap_size=[64, 64],
     num_output_channels=channel_cfg['num_output_channels'],
     num_joints=channel_cfg['dataset_joints'],
@@ -132,13 +137,13 @@ valid_pipeline = [
 
 test_pipeline = valid_pipeline
 
-data_root = '/media/sonnguyen/DATA2/Study/superAI/Pose-for-Everything/tools/data/mp100/'
+data_root = '/media/sonnguyen/DATA2/Study/superAI/Pose-for-Everything/tools/data/mp100/images'
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=8,
     train=dict(
         type='TransformerPoseDataset',
-        ann_file=f'{data_root}/annotations/mp100_split1_train.json',
+        ann_file=f'{data_root}/annotations/mp100_split5_train.json',
         img_prefix=f'{data_root}/images/',
         # img_prefix=f'{data_root}',
         data_cfg=data_cfg,
@@ -148,7 +153,7 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type='TransformerPoseDataset',
-        ann_file=f'{data_root}/annotations/mp100_split1_val.json',
+        ann_file=f'{data_root}/annotations/mp100_split5_val.json',
         img_prefix=f'{data_root}/images/',
         # img_prefix=f'{data_root}',
         data_cfg=data_cfg,
@@ -160,7 +165,7 @@ data = dict(
         pipeline=valid_pipeline),
     test=dict(
         type='TestPoseDataset',
-        ann_file=f'{data_root}/annotations/mp100_split1_test.json',
+        ann_file=f'{data_root}/annotations/mp100_split5_test.json',
         img_prefix=f'{data_root}/images/',
         # img_prefix=f'{data_root}',
         data_cfg=data_cfg,
@@ -168,7 +173,7 @@ data = dict(
         max_kpt_num=channel_cfg['max_kpt_num'],
         num_shots=1,
         num_queries=15,
-        num_episodes=200,  
+        num_episodes=200,  # 200
         pck_threshold_list=[0.05, 0.10, 0.15, 0.2, 0.25],
         pipeline=test_pipeline),
 )
